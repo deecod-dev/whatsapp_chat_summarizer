@@ -1,10 +1,11 @@
 .env
 
-# Ignore node_modules directory (dependencies can be restored with package.json)
+# (dependencies can be restored with package.json)
 node_modules/
-# Ignore cached files
+# Ignoring cached files
 .wwebjs_cache/
 
-hmm.txt
+
 hmm.json
 hmm1.json
+*.txt
