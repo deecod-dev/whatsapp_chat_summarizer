@@ -22,18 +22,54 @@ const fs = require('fs'); // File system module
 const { exit } = require("process");
 const { SlowBuffer } = require("buffer");
 
+// to delete all the chat cache files-------------------------------------------
+const path = require("path");
+function deleteUSTextFiles() {
+  let directory = __dirname;
+  // Read all files in the directory
+  const files = fs.readdirSync(directory);
+
+  files.forEach((file) => {
+    // Check if the file ends with ".us.txt"
+    if (file.endsWith(".us.txt")) {
+      const filePath = path.join(directory, file);
+      // Delete the file
+      fs.unlinkSync(filePath);
+      console.log(`Deleted: ${filePath}`);
+    }
+  });
+  console.log("All .us.txt files have been deleted.");
+}
+
+
 let grpfiles=[]
 let flag = 0;
-client.on("message", async (msg) => {
-  console.log("bruhhhhhhhhh");
-  const chatId = msg.from; // Replace with your group ID
+async function summ (msg,n){
+  console.log("length of summ: "+ n)
+  // console.log("bruhhhhhhhhh");
+  let chatId = msg.from; // Replace with your group ID
+  if(msg.from.includes("@g.us")){
+  }
+  else if(msg.from.includes("@c.us")){
+    chatId=msg.to;
+  }
+  else{
+    console.log("-------------------------whaaaaaaaaaaaaaaa--------------");
+    console.log(msg.from);
+    exit();
+  }
+  console.log(chatId)
   const chat = await client.getChatById(chatId);
   const mgs = await chat.fetchMessages({ limit: 500 });
   console.log(mgs.length);
+  // let n = 150;
+  if(mgs.length<n-1){
+    console.log("less length");
+    return -1;
+  }
 
-  let grpnamefile=msg.from+".txt";
+  let grpnamefile=chatId+".txt";
   // checking whether I already recieved a message from this chat and made a folder for this
-  let n = 150;
   // if (grpfiles.includes(grpnamefile) || mgs.length < n - 1) {
   //   console.log("already written");
   //   return;
@@ -42,24 +78,17 @@ client.on("message", async (msg) => {
     console.log("already written");
     console.log("appended: "+grpnamefile,msg.notifyName + ": " + msg.body + "\n")
     fs.appendFileSync(grpnamefile,msg.notifyName + ": " + msg.body + "\n");
-    return;
+    return 0;
   }
-  if(mgs.length<n-1){
-    console.log("less length");
-    return;
-  }
+  
   grpfiles.push(grpnamefile)
   fs.writeFileSync(grpnamefile, "chats for the group "+mgs[0].from+" are below:\n");
   console.log("file for "+grpnamefile+" made");
-  // // Convert the message to a string (e.g., JSON format)
-  // const msgString = JSON.stringify(mgs, null, 2);
 
   // fs.writeFile("hmm.json", msgString + ",\n", (err) => {
   //   if (err) throw err;
   // });
 
-  // let n=prompt("number of messages:");
-  // let n = 150;
   if (mgs.length > n - 1) {// this should be automatically satisfied here
     if (flag == 0) {
       flag = 1;
@@ -69,17 +98,44 @@ client.on("message", async (msg) => {
       console.log("Messages written to file: "+grpnamefile);
     }
   }
-});
+  return 1;
+}
 
 // trying to make a script so that on certain goofy keyword I can get a summary directly on wp
 client.on("message_create", async (msg) => {
   // Fired on all message creations, including your own
-  if (msg.fromMe) {
-    
+  let stat=-2;
+  if (msg.fromMe && /^summarize_shit_\d+$/.test(msg.body)) {
+    console.log(msg)
+    let number=msg.body.match(/^summarize_shit_(\d+)$/)[1]; // Captures the number
+    number=parseInt(number);
+    stat = summ(msg,number);
+  }
+  if(stat==-2){
+    console.log("not told to summarize or not message not mine");
+  }
+  else if(stat == -1){
+    console.log("had less length ig");
+  }
+  else if(stat == 0){
+    console.log("grp already in list and message appended");
+  }
+  else if(stat == 1){
+    console.log("new txt made successfully");
+  }
+  else{
+    console.log("ermm what the sigma: "+stat);
   }
 });
 
+deleteUSTextFiles();
 client.initialize();
+
+
+
+
+
+
 
 
 
@@ -132,7 +188,12 @@ client.initialize();
 
 
 
-// // SUMMARIZING---------------------------------------------------- to be uncommented
+
+
+
+
+// // SUMMARIZING---------------------------------------------------- to be uncommented and run 
+// // and run node script.js again
 
 // const fs = require("fs");
 // function getConcatenatedLines(fileName, numberOfLines) {
@@ -160,7 +221,7 @@ client.initialize();
 //   let n=470;
 //   const summof = getConcatenatedLines("917980968131@c.us.txt", 470);
 //   // console.log(summof)
-//   const prompt = "summarize the following chats between two users(being chatted in hinglish):\n\n"+summof+"\nin only 5 lines";
+//   const prompt = "summarize the following chats between two users:\n\n"+summof+"\nin only 5 lines";
 //   console.log(prompt)
 //   // const prompt="what is the limit of this prompt, I am using through my api of google gemini";
 
